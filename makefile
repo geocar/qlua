@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-DKXVER=3 -DLUA_COMPAT_MODULE=1 -fpic -I/usr/local/include/lua5.2
+CFLAGS=-DKXVER=3 -DLUA_COMPAT_MODULE=1 -fpic -I/usr/local/include/lua5.1
 LDFLAGS=-shared
 LIBS=-L/usr/local/lib -llua
 OUTPUT=k.so

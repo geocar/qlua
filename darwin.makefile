@@ -1,3 +1,3 @@
-CC=gcc-4.9
+CC=gcc
 LDFLAGS=-bundle -undefined dynamic_lookup 
 KARCH=m64

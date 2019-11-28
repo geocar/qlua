@@ -1,4 +1,4 @@
-# KDB client for LUA
+# KDB client for LUA
 
 You can use this to link with nginx+lua/openresty/whatever to get a Q-powered
 web service that can do more than a few thousand connections per second.

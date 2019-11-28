@@ -1,6 +1,7 @@
-mkdir -p kx
-curl -o kx/k.h http://kx.com/q/c/c/k.h
-curl -o kx/l32/c.o http://kx.com/q/l32/c.o
-curl -o kx/l64/c.o http://kx.com/q/l64/c.o
-curl -o kx/m32/c.o http://kx.com/q/m32/c.o
-curl -o kx/m64/c.o http://kx.com/q/m64/c.o
+a="l64 l32 m32 m64"
+b="https://raw.githubusercontent.com/KxSystems/kdb/master"
+for x in $a; do
+	mkdir -p "kx/$x"
+	curl -o "kx/$x/c.o" "$b/$x/c.o"
+done
+curl -o "kx/k.h" "$b/c/c/k.h"

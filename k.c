@@ -13,7 +13,7 @@ static K __thread conn_open = 0;
 static int enc(K*k,lua_State *L)
 {
 	switch (lua_type(L, -1)) {
-	case LUA_TSTRING: 	{ size_t len;const char *str = lua_tolstring(L,-1,&len);(*k)=kpn(str,len);R 1;}	break;
+	case LUA_TSTRING: 	{ size_t len;const char *str = lua_tolstring(L,-1,&len);(*k)=kpn((S)str,len);R 1;}	break;
 	case LUA_TNUMBER:	{ F num = lua_tonumber(L,-1);(*k) = (num==floor(num))?kj((J)num):kf(num);R 1;} break;
 	case LUA_TBOOLEAN:	{ (*k)=kb( lua_toboolean(L,-1) );R 1;}	break;
 	case LUA_TNIL:		{ (*k)=ktn(0,0);R 1;}	break;
@@ -59,7 +59,7 @@ static int enc(K*k,lua_State *L)
 			int n = 0;
 			/* table, startkey */
 			while (lua_next(L, -2) != 0) {
-				kS(keys)[n] = ss(lua_tostring(L, -2));
+				kS(keys)[n] = ss((S)lua_tostring(L, -2));
 				if(!enc(kK(values)+n,L))R 0;
 				lua_pop(L,1);
 				++n;

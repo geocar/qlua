@@ -2,12 +2,13 @@
 
 #include "kx/k.h"
 
+#include <pthread.h>
 #include <string.h>
 #include <math.h>
 
 #define RI(i) {lua_pushinteger(L,i);R 1;}
 #define LI(x) ((int)(floor(x)-1))
-static int last_connection = -1;
+static K __thread conn_open = 0;
 
 static int enc(K*k,lua_State *L)
 {
@@ -163,21 +164,54 @@ static int dec(lua_State* L,K x)
 	R 1;
 }
 
+static void clean(void*_)
+{
+	K x = conn_open;
+	if(x) {
+		DO(xn, kclose(xI[i]));
+		r0(x);
+	}
+	conn_open = 0;
+	m9();
+}
+static int conn(int fd)
+{
+	if(!conn_open) {
+		pthread_key_t rr;
+		pthread_key_create(&rr,clean);
+		conn_open = ktn(6,0);
+	}
+	conn_open = ja(&conn_open, &fd);
+	return fd;
+}
+
 static int wrap_khp(lua_State* L)
 {
 	S h=luaL_optstring(L,1,"0");
 	I p=luaL_optint(L,2,5000);
 	S u=luaL_optstring(L,3,0);
 	I t=luaL_optint(L,4,-1);
-	if(t<0){if(!u)RI(last_connection=khp(h,p));RI(last_connection=khpu(h,p,u));}
-	RI(last_connection=khpun(h,p,u,t));
+	if(t<0){if(!u)RI(conn(khp(h,p)));RI(conn(khpu(h,p,u)));}
+	RI(conn(khpun(h,p,u,t)));
 }
 static int wrap_kclose(lua_State*L)
 {
-	I c=luaL_optint(L,1,-1);
-	if(c<0) c=last_connection;
-	kclose(c);
-	if(c==last_connection)last_connection=-1;
+	int c, n = lua_gettop(L);
+	if(!n) {
+		K x = conn_open;
+		if(x) {
+			DO(xn, kclose(xI[i]));
+			xn = 0;
+		}
+	} else {
+		c=luaL_optint(L,1,-1);
+		if(c < 0) RI(0);
+		K x=ktn(6,conn_open->n); xn=0;
+		DO(conn_open->n,(x=((n=kI(conn_open)[i])==c)?kclose(c),c=-1,x:ja(&x,&n)));
+		r0(conn_open);
+		conn_open = x;
+		if(c != -1) RI(0);
+	}
 	RI(1);
 }
 static int dok(int f,lua_State*L)
@@ -189,7 +223,8 @@ static int dok(int f,lua_State*L)
 		c = (int)lua_tonumber(L,1);
 		--n;
 	} else {
-		c = last_connection;
+		if(!conn_open || !conn_open->n) RI(0);
+		c = kI(conn_open)[conn_open->n - 1];
 	}
 	/* k "kcode" [x [y [z]]] */
 	if(!n) {luaL_argcheck(L, 0, 1, "expected 1 argument"); R -1;}
@@ -215,14 +250,18 @@ static int wrap_ks(lua_State*L)
 
 int luaopen_k (lua_State *L)
 {
+	static int did_open = 0;
 	static const struct luaL_Reg _k [] = {
 		{"khpun",wrap_khp}, {"khpu",wrap_khp}, {"khp",wrap_khp},
 		{"kclose",wrap_kclose},
 		{"k",wrap_k}, {"ks",wrap_ks},
 		{NULL,NULL}
 	};
-
-	khp("",-1);
+	if(!did_open) {
+		khp("",-1);
+		setm(did_open = 1);
+	}
+	
 	luaL_register(L, "k", _k);
 	return 1;
 }

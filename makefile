@@ -1,7 +1,7 @@
 CC=gcc
-CFLAGS=-DKXVER=3 -DLUA_COMPAT_MODULE=1 -fpic -I/usr/local/include/lua5.1
+CFLAGS=-DKXVER=3 -DLUA_COMPAT_MODULE=1 -fPIC -I/usr/local/include/luajit-2.0/
 LDFLAGS=-shared
-LIBS=-L/usr/local/lib -llua
+LIBS=-L/usr/local/lib -lluajit -lpthread
 OUTPUT=k.so
 
 makefile=$(shell uname -s | tr A-Z a-z).makefile
@@ -12,4 +12,4 @@ k.o: k.c kx/k.h makefile $(makefile)
 kx/k.h kx/$(KARCH)/c.o makefile $(makefile):; sh kx.sh
 
 clean:; rm -f k.so
-test: $(OUTPUT) test.lua makefile; lua test.lua
+test: $(OUTPUT) test.lua makefile; luajit test.lua
